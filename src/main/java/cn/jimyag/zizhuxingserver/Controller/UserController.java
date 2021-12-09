@@ -91,18 +91,18 @@ public class UserController {
             userList = userDao.findByUsernameLike(username);
         }
         int resTotal = userList.size();
-        if(pagesize!=null &&pagenum !=null){
+        if (pagesize != null && pagenum != null) {
             if (pagesize < 1) {
                 pagesize = 1;
             }
             if (pagenum < 1) {
                 pagenum = 1;
             }
-            int totalPage = (int) Math.ceil(resTotal*1.0 / pagesize);
-            int begin = (resTotal / totalPage) * (pagenum-1) ;
+            int totalPage = (int) Math.ceil(resTotal * 1.0 / pagesize);
+            int begin = (resTotal / totalPage) * (pagenum - 1);
             int end = resTotal;
-            if(begin+pagesize <=end){
-                end = begin+pagesize;
+            if (begin + pagesize <= end) {
+                end = begin + pagesize;
             }
             System.out.println(begin);
             System.out.println(end);
@@ -113,6 +113,27 @@ public class UserController {
         resultModel.setCode(ErrorCode.REQUESTSUCCESS);
         resultModel.setMsg("成功");
         resultModel.setData(res);
+        return resultModel;
+    }
+
+    @UserLoginToken
+    @DeleteMapping("/user")
+    public ResultModel deleteUser(@RequestParam String username) {
+        ResultModel resultModel = new ResultModel();
+        User user = userDao.findByUsername(username);
+        if (user == null) {
+            resultModel.setCode(ErrorCode.USERNOTEXISTE);
+            resultModel.setMsg("用户不存在");
+            return resultModel;
+        }
+        int count = userDao.deleteUserByUsername(username);
+        if (count == 1) {
+            resultModel.setMsg("成功");
+            resultModel.setCode(ErrorCode.REQUESTSUCCESS);
+            return resultModel;
+        }
+        resultModel.setCode(ErrorCode.UNKNOWERROE);
+        resultModel.setData("失败");
         return resultModel;
     }
 }

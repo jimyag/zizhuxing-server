@@ -3,8 +3,10 @@ package cn.jimyag.zizhuxingserver.Dao;
 
 import cn.jimyag.zizhuxingserver.Entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 public interface UserDao extends JpaRepository<User, String> {
@@ -16,6 +18,10 @@ public interface UserDao extends JpaRepository<User, String> {
 
     public User findByUsername(String username);
 
-    @Query(value = "select * from User where username like ?1%",nativeQuery = true)
+    @Query(value = "select * from User where username like ?1%", nativeQuery = true)
     public List<User> findByUsernameLike(String username);
+
+    @Modifying
+    @Transactional
+    public Integer deleteUserByUsername(String username);
 }
