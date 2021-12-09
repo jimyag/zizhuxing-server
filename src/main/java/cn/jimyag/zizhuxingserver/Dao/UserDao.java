@@ -17,7 +17,7 @@ public interface UserDao extends JpaRepository<User, String> {
 
     User findById(int id);
 
-    @Query(value = "select * from User where username like ?1% limit ?2,?3", nativeQuery = true)
+    @Query(value = "select * from User where username like %?1% limit ?2,?3", nativeQuery = true)
     List<User> findByUsernameLikeSubPage(String username, int limit, int offset);
 
     @Modifying
@@ -40,4 +40,10 @@ public interface UserDao extends JpaRepository<User, String> {
     @Transactional
     @Query(value = "update User set password = ?2 where id = ?1", nativeQuery = true)
     Integer updateUserPassword(int id, String password);
+
+
+    @Modifying
+    @Transactional
+    @Query(value = "update User set email = ?2 where id = ?1", nativeQuery = true)
+    Integer updateUserEmail(int id, String email);
 }

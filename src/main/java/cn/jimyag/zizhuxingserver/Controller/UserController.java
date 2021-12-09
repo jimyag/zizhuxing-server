@@ -31,8 +31,6 @@ public class UserController {
     TokenService tokenService;
 
 
-
-
     @PostMapping("/register")
     public ResultModel createUser(@RequestBody String jsonData) {
         JSONObject jsonObject = JSON.parseObject(jsonData);
@@ -205,6 +203,31 @@ public class UserController {
             resultModel.setData("失败");
         }
         return resultModel;
-
     }
+
+
+    @UserLoginToken
+    @PutMapping("/user/{id}/email")
+    public ResultModel editUserEmail(@PathVariable Integer id, @RequestBody String jsonData) {
+        JSONObject jsonObject = JSON.parseObject(jsonData);
+        ResultModel resultModel = new ResultModel();
+        User newUser = JSON.toJavaObject(jsonObject, User.class);
+        User oldUser = userDao.findById(id);
+        if (oldUser == null) {
+            resultModel.setCode(ErrorCode.USERNOTEXISTE);
+            resultModel.setData("用户不存在");
+            return resultModel;
+        }
+        int count = userDao.updateUserEmail(id, newUser.getEmail());
+
+        if (count == 1) {
+            resultModel.setCode(ErrorCode.REQUESTSUCCESS);
+            resultModel.setMsg("成功");
+        } else {
+            resultModel.setCode(ErrorCode.UNKNOWERROE);
+            resultModel.setData("失败");
+        }
+        return resultModel;
+    }
+
 }
