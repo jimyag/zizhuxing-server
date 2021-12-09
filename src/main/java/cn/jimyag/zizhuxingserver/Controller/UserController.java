@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 
 @RequestMapping("/zizhuxing")
@@ -33,7 +34,6 @@ public class UserController {
 
     @PostMapping("/register")
     public ResultModel createUser(@RequestBody String jsonData) {
-        System.out.println(jsonData);
         JSONObject jsonObject = JSON.parseObject(jsonData);
         User user = JSON.toJavaObject(jsonObject, User.class);
         ResultModel resultModel = new ResultModel();
@@ -76,10 +76,10 @@ public class UserController {
     }
 
     @UserLoginToken
-    @GetMapping("/user/{username}")
-    public ResultModel getUser(@PathVariable String username) {
+    @GetMapping("/user/{id}")
+    public ResultModel getUser(@PathVariable int id) {
         ResultModel resultModel = new ResultModel();
-        User user = userDao.findByUsername(username);
+        User user = userDao.findById(id);
         if (user == null) {
             resultModel.setMsg("用户不存在");
             resultModel.setCode(ErrorCode.USERNOTEXISTE);
@@ -93,9 +93,30 @@ public class UserController {
 
 
     @UserLoginToken
-    @PutMapping("/user/{username}")
-    public ResultModel editUser(@PathVariable String username) {
-        return new ResultModel();
+    @PutMapping("/user/{id}")
+    public ResultModel editUser(@PathVariable int id, @RequestBody String jsonData) {
+        ResultModel resultModel = new ResultModel();
+        JSONObject jsonObject = JSON.parseObject(jsonData);
+        User newUser = JSON.toJavaObject(jsonObject, User.class);
+        User oldUser = userDao.findById(id);
+        if (oldUser == null) {
+            resultModel.setCode(ErrorCode.USERNOTEXISTE);
+            resultModel.setData("用户不存在");
+            return resultModel;
+        }
+        if (newUser.getRole() == 0) {
+            newUser.setRole(oldUser.getRole());
+        }
+        int count = userDao.updateUserNameById(id, newUser.getUsername());
+        int countRole = userDao.updateRoleById(id, newUser.getRole());
+        if (count == 1 && countRole == 1) {
+            resultModel.setCode(ErrorCode.REQUESTSUCCESS);
+            resultModel.setMsg("成功");
+        } else {
+            resultModel.setCode(ErrorCode.UNKNOWERROE);
+            resultModel.setData("失败");
+        }
+        return resultModel;
     }
 
     @UserLoginToken
@@ -121,16 +142,16 @@ public class UserController {
     }
 
     @UserLoginToken
-    @DeleteMapping("/user/{username}")
-    public ResultModel deleteUser(@PathVariable String username) {
+    @DeleteMapping("/user/{id}")
+    public ResultModel deleteUser(@PathVariable int id) {
         ResultModel resultModel = new ResultModel();
-        User user = userDao.findByUsername(username);
+        User user = userDao.findById(id);
         if (user == null) {
             resultModel.setCode(ErrorCode.USERNOTEXISTE);
             resultModel.setMsg("用户不存在");
             return resultModel;
         }
-        int count = userDao.deleteUserByUsername(username);
+        int count = userDao.deleteUserById(id);
         if (count == 1) {
             resultModel.setMsg("成功");
             resultModel.setCode(ErrorCode.REQUESTSUCCESS);
