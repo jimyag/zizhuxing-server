@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 
 @RequestMapping("/zizhuxing")
@@ -32,11 +31,13 @@ public class UserController {
     TokenService tokenService;
 
 
+
+
     @PostMapping("/register")
     public ResultModel createUser(@RequestBody String jsonData) {
         JSONObject jsonObject = JSON.parseObject(jsonData);
-        User user = JSON.toJavaObject(jsonObject, User.class);
         ResultModel resultModel = new ResultModel();
+        User user = JSON.toJavaObject(jsonObject, User.class);
         user.setRole(2);
 
         if (userDao.existsUserByUsername(user.getUsername())) {
@@ -56,9 +57,9 @@ public class UserController {
      */
     @PostMapping("/login")
     public ResultModel updateUser(@RequestBody String jsonData) {
+        ResultModel resultModel = new ResultModel();
         JSONObject jsonObject = JSON.parseObject(jsonData);
         User user = JSON.toJavaObject(jsonObject, User.class);
-        ResultModel resultModel = new ResultModel();
         if (!userDao.existsUserByUsername(user.getUsername())) {
             resultModel.setMsg("该用户不存在");
             resultModel.setCode(ErrorCode.USERNOTEXISTE);
@@ -92,24 +93,44 @@ public class UserController {
     }
 
 
-    @UserLoginToken
-    @PutMapping("/user/{id}")
-    public ResultModel editUser(@PathVariable int id, @RequestBody String jsonData) {
-        ResultModel resultModel = new ResultModel();
-        JSONObject jsonObject = JSON.parseObject(jsonData);
+    @PutMapping("/user/{id}/role")
+    public ResultModel editUserRole(@PathVariable Integer id, @RequestBody String jsonData) {
+        var jsonObject = JSON.parseObject(jsonData);
         User newUser = JSON.toJavaObject(jsonObject, User.class);
         User oldUser = userDao.findById(id);
+        ResultModel resultModel = new ResultModel();
         if (oldUser == null) {
             resultModel.setCode(ErrorCode.USERNOTEXISTE);
             resultModel.setData("用户不存在");
             return resultModel;
         }
-        if (newUser.getRole() == 0) {
-            newUser.setRole(oldUser.getRole());
+        int count = userDao.updateRoleById(id, newUser.getRole());
+        if (count == 1) {
+            resultModel.setCode(ErrorCode.REQUESTSUCCESS);
+            resultModel.setMsg("成功");
+        } else {
+            resultModel.setCode(ErrorCode.UNKNOWERROE);
+            resultModel.setData("失败");
+        }
+        return resultModel;
+
+    }
+
+    @UserLoginToken
+    @PutMapping("/user/{id}/username")
+    public ResultModel editUserName(@PathVariable Integer id, @RequestBody String jsonData) {
+        JSONObject jsonObject = JSON.parseObject(jsonData);
+        User newUser = JSON.toJavaObject(jsonObject, User.class);
+        User oldUser = userDao.findById(id);
+        ResultModel resultModel = new ResultModel();
+        if (oldUser == null) {
+            resultModel.setCode(ErrorCode.USERNOTEXISTE);
+            resultModel.setData("用户不存在");
+            return resultModel;
         }
         int count = userDao.updateUserNameById(id, newUser.getUsername());
-        int countRole = userDao.updateRoleById(id, newUser.getRole());
-        if (count == 1 && countRole == 1) {
+
+        if (count == 1) {
             resultModel.setCode(ErrorCode.REQUESTSUCCESS);
             resultModel.setMsg("成功");
         } else {
@@ -144,8 +165,8 @@ public class UserController {
     @UserLoginToken
     @DeleteMapping("/user/{id}")
     public ResultModel deleteUser(@PathVariable int id) {
-        ResultModel resultModel = new ResultModel();
         User user = userDao.findById(id);
+        ResultModel resultModel = new ResultModel();
         if (user == null) {
             resultModel.setCode(ErrorCode.USERNOTEXISTE);
             resultModel.setMsg("用户不存在");
@@ -160,5 +181,30 @@ public class UserController {
         resultModel.setCode(ErrorCode.UNKNOWERROE);
         resultModel.setData("失败");
         return resultModel;
+    }
+
+    @UserLoginToken
+    @PutMapping("/user/{id}/password")
+    public ResultModel editUserPassword(@PathVariable Integer id, @RequestBody String jsonData) {
+        JSONObject jsonObject = JSON.parseObject(jsonData);
+        ResultModel resultModel = new ResultModel();
+        User newUser = JSON.toJavaObject(jsonObject, User.class);
+        User oldUser = userDao.findById(id);
+        if (oldUser == null) {
+            resultModel.setCode(ErrorCode.USERNOTEXISTE);
+            resultModel.setData("用户不存在");
+            return resultModel;
+        }
+        int count = userDao.updateUserPassword(id, newUser.getPassword());
+
+        if (count == 1) {
+            resultModel.setCode(ErrorCode.REQUESTSUCCESS);
+            resultModel.setMsg("成功");
+        } else {
+            resultModel.setCode(ErrorCode.UNKNOWERROE);
+            resultModel.setData("失败");
+        }
+        return resultModel;
+
     }
 }
