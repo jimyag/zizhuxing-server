@@ -76,38 +76,42 @@ public class UserController {
     }
 
     @UserLoginToken
-    @GetMapping("/user")
+    @GetMapping("/user/{username}")
+    public ResultModel getUser(@PathVariable String username) {
+        ResultModel resultModel = new ResultModel();
+        User user = userDao.findByUsername(username);
+        if (user == null) {
+            resultModel.setMsg("用户不存在");
+            resultModel.setCode(ErrorCode.USERNOTEXISTE);
+            return resultModel;
+        }
+        resultModel.setCode(ErrorCode.REQUESTSUCCESS);
+        resultModel.setMsg("成功");
+        resultModel.setData(user);
+        return resultModel;
+    }
+
+
+    @UserLoginToken
+    @PutMapping("/user/{username}")
+    public ResultModel editUser(@PathVariable String username) {
+        return new ResultModel();
+    }
+
+    @UserLoginToken
+    @GetMapping("/users")
     public ResultModel getUserList(@RequestParam(required = false) String username,
                                    @RequestParam(required = false) Integer pagesize,
                                    @RequestParam(required = false) Integer pagenum) {
+        int resTotal = userDao.findAll().size();
         ResultModel resultModel = new ResultModel();
         List<User> userList;
         Map<String, Object> res = new HashMap<>();
-        // 如果用户名为空 就是所有的用户都要
+        int index = (pagenum - 1) * pagesize;
         if (username == null) {
-            userList = userDao.findAll();
-
-        } else {
-            userList = userDao.findByUsernameLike(username);
+            username = "";
         }
-        int resTotal = userList.size();
-        if (pagesize != null && pagenum != null) {
-            if (pagesize < 1) {
-                pagesize = 1;
-            }
-            if (pagenum < 1) {
-                pagenum = 1;
-            }
-            int totalPage = (int) Math.ceil(resTotal * 1.0 / pagesize);
-            int begin = (resTotal / totalPage) * (pagenum - 1);
-            int end = resTotal;
-            if (begin + pagesize <= end) {
-                end = begin + pagesize;
-            }
-            System.out.println(begin);
-            System.out.println(end);
-            userList = userList.subList(begin, end);
-        }
+        userList = userDao.findByUsernameLikeSubPage(username, index, pagesize);
         res.put("total", resTotal);
         res.put("data", userList);
         resultModel.setCode(ErrorCode.REQUESTSUCCESS);
@@ -117,8 +121,8 @@ public class UserController {
     }
 
     @UserLoginToken
-    @DeleteMapping("/user")
-    public ResultModel deleteUser(@RequestParam String username) {
+    @DeleteMapping("/user/{username}")
+    public ResultModel deleteUser(@PathVariable String username) {
         ResultModel resultModel = new ResultModel();
         User user = userDao.findByUsername(username);
         if (user == null) {
