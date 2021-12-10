@@ -4,8 +4,7 @@ import cn.jimyag.zizhuxingserver.Dao.SectorDao;
 import cn.jimyag.zizhuxingserver.Dao.UserDao;
 import cn.jimyag.zizhuxingserver.Entity.User;
 import cn.jimyag.zizhuxingserver.Service.TokenService;
-import cn.jimyag.zizhuxingserver.Utils.ErrorCode;
-import cn.jimyag.zizhuxingserver.Utils.ResultModel;
+import cn.jimyag.zizhuxingserver.Utils.*;
 
 import cn.jimyag.zizhuxingserver.annoation.UserLoginToken;
 import com.alibaba.fastjson.JSON;
@@ -13,9 +12,12 @@ import com.alibaba.fastjson.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.mail.MessagingException;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 
 @RequestMapping("/zizhuxing")
@@ -29,14 +31,49 @@ public class UserController {
 
     @Autowired
     TokenService tokenService;
+    private final EmailCodeCache emailCodeCache = new EmailCodeCache();
+    private final Email email = new Email();
+
+
+    @PostMapping("/email/{email}")
+    public ResultModel SendEmail(@PathVariable String email) {
+        ResultModel resultModel = new ResultModel();
+        String code = RandomCode.randomCode();
+        try {
+            this.email.Send(email, "资助星注册验证码", "<h1>【资助星】欢迎注册资助星，您本次的验证码为" + code + "请保存好不要随意给其他人，有效期5分钟</h1>");
+            emailCodeCache.Cache(email, code);
+        } catch (UnsupportedEncodingException | MessagingException e) {
+            resultModel.setCode(ErrorCode.UNKNOWERROE);
+            resultModel.setMsg(e.toString());
+            return resultModel;
+        }
+        resultModel.setCode(ErrorCode.REQUESTSUCCESS);
+        resultModel.setMsg("验证码发送成功");
+        return resultModel;
+    }
 
 
     @PostMapping("/register")
     public ResultModel createUser(@RequestBody String jsonData) {
         JSONObject jsonObject = JSON.parseObject(jsonData);
         ResultModel resultModel = new ResultModel();
+        String code = jsonObject.getString("code");
+        String email = jsonObject.getString("email");
+
+        String cacheCode = this.emailCodeCache.GetCache(email);
+        // 判断验证码是否存在
+        if (cacheCode.equals("")) {
+            resultModel.setCode(ErrorCode.UNKNOWERROE);
+            resultModel.setMsg("验证码不存在或已过期");
+            return resultModel;
+        }
+
+        if (!cacheCode.equals(code)) {
+            resultModel.setCode(ErrorCode.UNKNOWERROE);
+            resultModel.setMsg("验证码错误");
+            return resultModel;
+        }
         User user = JSON.toJavaObject(jsonObject, User.class);
-        user.setRole(2);
 
         if (userDao.existsUserByUsername(user.getUsername())) {
             resultModel.setMsg("该用户已存在");
