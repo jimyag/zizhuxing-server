@@ -17,7 +17,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 
 @RequestMapping("/zizhuxing")
@@ -79,6 +78,7 @@ public class UserController {
             resultModel.setMsg("验证码错误");
             return resultModel;
         }
+        this.emailCodeCache.removeCache(email);
         User user = JSON.toJavaObject(jsonObject, User.class);
 
         if (userDao.existsUserByUsername(user.getUsername())) {

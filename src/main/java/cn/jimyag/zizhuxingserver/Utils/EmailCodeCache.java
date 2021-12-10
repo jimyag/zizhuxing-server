@@ -21,6 +21,9 @@ public class EmailCodeCache {
             .build();
     private String email;
 
+    public void removeCache(String key) {
+        this.loadingCache.invalidate(key);
+    }
 
     public void Cache(String key, String value) {
         loadingCache.put(key, value);
