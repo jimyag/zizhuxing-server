@@ -93,6 +93,25 @@ public class UserController {
     }
 
 
+
+
+    @PostMapping("/admin/register")
+    public ResultModel adminCreateUser(@RequestBody String jsonData) {
+        JSONObject jsonObject = JSON.parseObject(jsonData);
+        ResultModel resultModel = new ResultModel();
+        User user = JSON.toJavaObject(jsonObject, User.class);
+        if (userDao.existsUserByUsername(user.getUsername())) {
+            resultModel.setMsg("该用户已存在");
+            resultModel.setCode(ErrorCode.USEREXISTE);
+        } else {
+            userDao.save(user);
+            resultModel.setCode(ErrorCode.REQUESTSUCCESS);
+            resultModel.setMsg("成功");
+        }
+        return resultModel;
+    }
+
+
     /**
      * 登录
      */
