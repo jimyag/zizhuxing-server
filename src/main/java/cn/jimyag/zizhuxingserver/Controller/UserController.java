@@ -38,6 +38,12 @@ public class UserController {
     @PostMapping("/email/{email}")
     public ResultModel SendEmail(@PathVariable String email) {
         ResultModel resultModel = new ResultModel();
+        String cacheCode = this.emailCodeCache.GetCache(email);
+        if (cacheCode.equals("")) {
+            resultModel.setCode(ErrorCode.UNKNOWERROE);
+            resultModel.setMsg("歇会再发");
+            return resultModel;
+        }
         String code = RandomCode.randomCode();
         try {
             this.email.Send(email, "资助星注册验证码", "<h1>【资助星】欢迎注册资助星，您本次的验证码为" + code + "请保存好不要随意给其他人，有效期5分钟</h1>");
