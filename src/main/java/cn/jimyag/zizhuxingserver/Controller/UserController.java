@@ -38,7 +38,7 @@ public class UserController {
     public ResultModel SendEmail(@PathVariable String email) {
         ResultModel resultModel = new ResultModel();
         String cacheCode = this.emailCodeCache.GetCache(email);
-        if (cacheCode.equals("")) {
+        if (!cacheCode.equals("")) {
             resultModel.setCode(ErrorCode.UNKNOWERROE);
             resultModel.setMsg("歇会再发");
             return resultModel;
@@ -94,7 +94,7 @@ public class UserController {
 
 
 
-
+    @UserLoginToken
     @PostMapping("/admin/register")
     public ResultModel adminCreateUser(@RequestBody String jsonData) {
         JSONObject jsonObject = JSON.parseObject(jsonData);
